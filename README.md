@@ -1,20 +1,20 @@
 # Super-Resolution Simulation
 
 
-## run
+## Run
 
 Install pytorch
 ```shell
 conda install pytorch -c pytorch
 ```
 
-Set MKL threading
+Set MKL threading on Frontera CLX node
 ```shell
 export OMP_NUM_THREADS=56
 ```
 
 
-## models
+## Models
 
 * SRGAN
 * TODO: GAN to CGAN
@@ -25,7 +25,7 @@ export OMP_NUM_THREADS=56
   - <https://arxiv.org/abs/1707.02937>
 
 
-### references and repos
+### Refs and Repos
 
 * SRGAN <https://arxiv.org/abs/1609.04802>
 * SRCNN <https://arxiv.org/abs/1501.00092>
@@ -41,14 +41,14 @@ export OMP_NUM_THREADS=56
 * <https://github.com/xinntao/ESRGAN>
 
 
-## data
+## Data
 
 * dark matter only simulations, 5 realizations, 50Mpc/h, z=7
     - lores 440^3 particles
     - hires 880^3 particles
 
 
-## accuracy
+## Accuracy
 
 The generated small scale modes should have the right statistical property.
 
@@ -62,7 +62,7 @@ TODO: The following metrics can be used for evaluation
   where `k3` is in the range of the generated short modes
 
 
-## efficiency
+## Efficiency
 
 Parallelization
 
