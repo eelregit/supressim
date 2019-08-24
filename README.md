@@ -1,6 +1,19 @@
 # Super-Resolution Simulation
 
 
+## run
+
+Install pytorch
+```shell
+conda install pytorch -c pytorch
+```
+
+Set MKL threading
+```shell
+export OMP_NUM_THREADS=56
+```
+
+
 ## models
 
 * SRGAN
