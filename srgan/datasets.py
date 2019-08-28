@@ -4,6 +4,31 @@ import torch
 from torch.utils.data import Dataset
 
 
+def _random_flip_3d(x):
+    axes = np.random.randint(2, size=3, dtype=bool)
+    axes = np.arange(3)[axes]
+
+    axes_twice = np.concatenate([axes, 3 + axes])
+    x[axes_twice] = - x[axes_twice]  # flip vector components
+
+    axes = 1 + axes
+    x = np.flip(x, axis=axes)
+
+    return x
+
+def _random_permute_3d(x):
+    axes = np.random.permutation(3)
+
+    axes_twice = np.concatenate([axes, 3 + axes])
+
+    x = x[axes_twice]  # permutate vector components
+
+    axes = np.insert(1 + axes, 0, 0)
+    x = x.transpose(axes)
+
+    return x
+
+
 class BoxesDataset(Dataset):
     def __init__(self, hr_glob_path, augment=True):
         self.hr_files = sorted(glob(hr_glob_path))
@@ -23,7 +48,12 @@ class BoxesDataset(Dataset):
         hr_box = np.moveaxis(hr_box, -1, 0)
 
         if self.augment:
-            pass # TODO: data augmentation
+            _random_flip_3d(lr_box)
+            _random_flip_3d(hr_box)
+
+            _random_permute_3d(lr_box)
+            _random_permute_3d(hr_box)
+
 
         lr_box = torch.from_numpy(lr_box).float()
         hr_box = torch.from_numpy(hr_box).float()
