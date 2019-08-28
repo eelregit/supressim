@@ -4,17 +4,17 @@ import os
 import sys
 import argparse
 import numpy as np
-
 import torch
 import torch.nn as nn
-
 from torch.utils.data import DataLoader
 
 from models import *
 from datasets import BoxesDataset
 
-os.makedirs("saved_samples", exist_ok=True)
-os.makedirs("saved_models", exist_ok=True)
+sample_path = "saved_samples/"
+model_path = "saved_models/"
+os.makedirs(sample_path, exist_ok=True)
+os.makedirs(model_path, exist_ok=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
@@ -34,7 +34,6 @@ print(args)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 device = torch.device(device)
 
-# Initialize generator and discriminator
 generator = GeneratorResNet()
 discriminator = Discriminator()
 #feature_extractor = FeatureExtractor()
@@ -53,11 +52,9 @@ criterion_GAN = criterion_GAN.to(device)
 #criterion_content = criterion_content.to(device)
 
 if args.epoch != 0:
-    # Load pretrained models
-    generator.load_state_dict(torch.load("saved_models/generator_%d.pth"))
-    discriminator.load_state_dict(torch.load("saved_models/discriminator_%d.pth"))
+    generator.load_state_dict(torch.load(model_path + "generator_%d.pth"))
+    discriminator.load_state_dict(torch.load(model_path + "discriminator_%d.pth"))
 
-# Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr, betas=(args.b1, args.b2))
 optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr, betas=(args.b1, args.b2))
 
@@ -75,11 +72,9 @@ dataloader = DataLoader(
 for epoch in range(args.epoch, args.n_epochs):
     for i, (lr_boxes, hr_boxes) in enumerate(dataloader):
 
-        # Configure model input
         lr_boxes = lr_boxes.to(device)
         hr_boxes = hr_boxes.to(device)
 
-        # Adversarial ground truths
         yes = torch.ones(1, dtype=torch.float, device=device, requires_grad=False)  # broadcasting
         no = torch.zeros(1, dtype=torch.float, device=device, requires_grad=False)
 
@@ -89,10 +84,10 @@ for epoch in range(args.epoch, args.n_epochs):
 
         optimizer_G.zero_grad()
 
-        hr_gen = generator(lr_boxes)
+        sr_boxes = generator(lr_boxes)
 
         # Adversarial loss
-        loss_GAN = criterion_GAN(discriminator(hr_gen), yes)
+        loss_GAN = criterion_GAN(discriminator(sr_boxes), yes)
 
         ## Content loss
         #gen_features = feature_extractor(gen_hr)
@@ -112,9 +107,9 @@ for epoch in range(args.epoch, args.n_epochs):
 
         optimizer_D.zero_grad()
 
-        hr_boxes = narrow_like(hr_boxes, hr_gen)
+        hr_boxes = narrow_like(hr_boxes, sr_boxes)
         loss_real = criterion_GAN(discriminator(hr_boxes), yes)
-        loss_fake = criterion_GAN(discriminator(hr_gen.detach()), no)
+        loss_fake = criterion_GAN(discriminator(sr_boxes.detach()), no)
 
         loss_D = (loss_real + loss_fake) / 2
 
@@ -131,16 +126,12 @@ for epoch in range(args.epoch, args.n_epochs):
         )
         sys.stdout.flush()
 
-        #batches_done = epoch * len(dataloader) + i
-        #if batches_done % args.sample_interval == 0:
-        #    # Save image grid with upsampled inputs and SRGAN outputs
-        #    imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=4)
-        #    gen_hr = make_grid(gen_hr, nrow=1, normalize=True)
-        #    imgs_lr = make_grid(imgs_lr, nrow=1, normalize=True)
-        #    img_grid = torch.cat((imgs_lr, gen_hr), -1)
-        #    save_image(img_grid, "saved_samples/%d.png" % batches_done, normalize=False)
+        batches = epoch * len(dataloader) + i
+        if batches % args.sample_interval == 0:
+            #lr_boxes = nn.functional.interpolate(lr_boxes, scale_factor=2)
+            np.save(sample_path + "lr_{}.npy".format(batches), lr_boxes.numpy())
+            np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().numpy())
 
     if args.checkpoint_interval != -1 and epoch % args.checkpoint_interval == 0:
-        # Save model checkpoints
-        torch.save(generator.state_dict(), "saved_models/generator_%d.pth" % epoch)
-        torch.save(discriminator.state_dict(), "saved_models/discriminator_%d.pth" % epoch)
+        torch.save(generator.state_dict(), model_path + "generator_%d.pth" % epoch)
+        torch.save(discriminator.state_dict(), model_path + "discriminator_%d.pth" % epoch)
