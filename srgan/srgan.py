@@ -10,9 +10,6 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 
-import torchvision.transforms as transforms
-from torchvision.utils import save_image, make_grid
-
 from models import *
 from datasets import BoxesDataset
 
