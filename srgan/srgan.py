@@ -128,6 +128,7 @@ for epoch in range(args.epoch, args.n_epochs):
         if batches % args.sample_interval == 0:
             #lr_boxes = nn.functional.interpolate(lr_boxes, scale_factor=2)
             np.save(sample_path + "lr_{}.npy".format(batches), lr_boxes.numpy())
+            np.save(sample_path + "hr_{}.npy".format(batches), hr_boxes.numpy())
             np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().numpy())
 
     if args.checkpoint_interval != -1 and epoch % args.checkpoint_interval == 0:
