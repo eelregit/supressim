@@ -37,12 +37,12 @@ class ResidualBlock(nn.Module):
     def forward(self, x):
         y = self.conv_block(x)
         x = narrow_like(x, y)
-        return x + y
+        return x + y  # NOTE activation?
 
 
 class GeneratorResNet(nn.Module):
     #def __init__(self, in_channels=3, out_channels=3, n_residual_blocks=16):
-    def __init__(self, in_channels=6, out_channels=6, n_residual_blocks=1):
+    def __init__(self, in_channels=6, out_channels=6, n_residual_blocks=4):
         super(GeneratorResNet, self).__init__()
 
         self.conv1 = nn.Sequential(nn.Conv3d(in_channels, 32, 5), nn.PReLU())

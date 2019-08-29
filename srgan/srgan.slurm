@@ -13,6 +13,6 @@ hostname; pwd; date
 
 export OMP_NUM_THREADS=56
 
-python srgan.py
+python srgan.py --checkpoint-interval 1
 
 date
