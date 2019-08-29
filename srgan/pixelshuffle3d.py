@@ -1,7 +1,9 @@
+"""Example of 3D pixel-shuffle, from pytorch pull request
+https://github.com/pytorch/pytorch/pull/5051
+"""
+
 from torch.nn import Module
 
-# from pytorch pull request "Pixelshuffle for volumetric convolutions"
-# https://github.com/pytorch/pytorch/pull/5051
 
 def pixel_shuffle_3d(input, upscale_factor):
     r"""Rearranges elements in a tensor of shape ``[*, C*r^3, H, W, D]`` to a

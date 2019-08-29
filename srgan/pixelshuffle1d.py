@@ -1,4 +1,7 @@
-# https://gist.github.com/davidaknowles/6e95a643adaf3960d1648a6b369e9d0b
+"""Example of 1D pixel-shuffle, from
+https://gist.github.com/davidaknowles/6e95a643adaf3960d1648a6b369e9d0b
+"""
+
 
 def pixel_shuffle_1d(x, upscale_factor):
     batch_size, channels, steps = x.size()

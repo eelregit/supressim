@@ -1,9 +1,11 @@
+"""Generic nD pixel-shuffle, from pytorch pull request
+https://github.com/pytorch/pytorch/pull/6340
+which is outdated and has a bug. The bug has been fixed here.
+"""
+
 import torch
 from torch.nn import Module
 
-# from pytorch pull request "Generic version of pixel_shuffle - 1d, 2d, ..., nd"
-# this PR is outdated and has a bug, that has been fixed here
-# https://github.com/pytorch/pytorch/pull/6340
 
 def pixel_shuffle(input, upscale_factor):
     r"""Rearranges elements in a Tensor of shape :math:`(N, C, d_{1}, d_{2}, ..., d_{n})` to a
