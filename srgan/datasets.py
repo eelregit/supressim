@@ -48,11 +48,11 @@ class BoxesDataset(Dataset):
         hr_box = np.moveaxis(hr_box, -1, 0)
 
         if self.augment:
-            _random_flip_3d(lr_box)
-            _random_flip_3d(hr_box)
+            lr_box = _random_flip_3d(lr_box)
+            hr_box = _random_flip_3d(hr_box)
 
-            _random_permute_3d(lr_box)
-            _random_permute_3d(hr_box)
+            lr_box = _random_permute_3d(lr_box)
+            hr_box = _random_permute_3d(hr_box)
 
 
         lr_box = torch.from_numpy(lr_box).float()
