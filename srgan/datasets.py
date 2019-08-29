@@ -4,29 +4,34 @@ import torch
 from torch.utils.data import Dataset
 
 
-def _random_flip_3d(x):
+def _random_flip_3d(*arrays):
     axes = np.random.randint(2, size=3, dtype=bool)
     axes = np.arange(3)[axes]
 
     axes_twice = np.concatenate([axes, 3 + axes])
-    x[axes_twice] = - x[axes_twice]  # flip vector components
-
     axes = 1 + axes
-    x = np.flip(x, axis=axes)
 
-    return x
+    flipped_arrays = []
+    for a in arrays:
+        a[axes_twice] = - a[axes_twice]  # flip vector components
+        a = np.flip(a, axis=axes)
+        flipped_arrays.append(a)
 
-def _random_permute_3d(x):
+    return flipped_arrays
+
+def _random_permute_3d(*arrays):
     axes = np.random.permutation(3)
 
     axes_twice = np.concatenate([axes, 3 + axes])
-
-    x = x[axes_twice]  # permutate vector components
-
     axes = np.insert(1 + axes, 0, 0)
-    x = x.transpose(axes)
 
-    return x
+    permuted_arrays = []
+    for a in arrays:
+        a = a[axes_twice]  # permutate vector components
+        a = a.transpose(axes)
+        permuted_arrays.append(a)
+
+    return permuted_arrays
 
 
 class BoxesDataset(Dataset):
@@ -48,11 +53,8 @@ class BoxesDataset(Dataset):
         hr_box = np.moveaxis(hr_box, -1, 0)
 
         if self.augment:
-            lr_box = _random_flip_3d(lr_box)
-            hr_box = _random_flip_3d(hr_box)
-
-            lr_box = _random_permute_3d(lr_box)
-            hr_box = _random_permute_3d(hr_box)
+            lr_box, hr_box = _random_flip_3d(lr_box, hr_box)
+            lr_box, hr_box = _random_permute_3d(lr_box, hr_box)
 
 
         lr_box = torch.from_numpy(lr_box).float()
