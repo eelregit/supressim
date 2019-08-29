@@ -11,6 +11,6 @@
 
 hostname; pwd; date
 
-./preproc.py 0 5 004 005
+python preproc.py 0 5 004 005
 
 date
