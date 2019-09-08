@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import models
-from datasets import BoxesDataset
+from supressim.srgan import models
+from supressim.srgan.datasets import BoxesDataset
 
 sample_path = "saved_samples/"
 model_path = "saved_models/"
