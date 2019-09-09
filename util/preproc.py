@@ -34,6 +34,11 @@ def pos2dis(pos, boxsize, Ng):
 
 
 def set_subgrids(Ng):
+    """Determine the subgrid size and offset given the grid size.
+
+    The first subgrid starts from the origin, and the closest ones to it are
+    offset by a certain distance in x, y, and z axes.
+    """
     Nsg = Ng // 5
     offset = Nsg // 2
     return Nsg, offset

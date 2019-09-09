@@ -23,6 +23,8 @@ export OMP_NUM_THREADS=56
 * TODO: concatenate white noise to lores in generator input
 * TODO: ICNR initialization
   - <https://arxiv.org/abs/1707.02937>
+* TODO: batchnorm after activation?
+* TODO: activation, swish?
 
 
 ### Refs and Repos
@@ -56,7 +58,7 @@ The generated small scale modes should have the right statistical property.
 
 TODO: The following metrics can be used for evaluation
 * PDF of the new displacements and velocities
-* halo abundance
+* halo and subhalo abundances
 * P(k) in the last 2-fold in k
 * cross bispectrum, compare
     - `< delta_lo(k1) delta_lo(k2) delta_hi(k3) >`
@@ -69,6 +71,7 @@ TODO: The following metrics can be used for evaluation
 Parallelization
 
 TODO: DDP
+TODO: MKL-DNN vs DP
 * MKL-DNN
   - `export MKL_NUM_THREADS=$NUM_CORES OMP_NUM_THREADS=$NUM_CORES`
   - alternatively, `torch.set_num_threads(num_cores)`
