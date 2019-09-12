@@ -19,6 +19,8 @@ LOG_PATH=$LOG_DIR/$LOG_NAME
 
 mkdir -p "$LOG_DIR"
 
-python srsgan.py --checkpoint-interval 1 &> "$LOG_PATH"
+srsgan.py --checkpoint-interval 1 &> "$LOG_PATH"
+
+echo stdout and stderr have been redirected to $LOG_PATH
 
 date
