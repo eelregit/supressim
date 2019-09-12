@@ -13,5 +13,5 @@ setup(
         'numpy',
         'bigfile',  # only for training data preprocessing
     ],
-    scripts=['scripts/srgan.py']
+    scripts=['scripts/srsgan.py']
 )
