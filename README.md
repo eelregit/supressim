@@ -8,6 +8,11 @@ Install pytorch
 conda install pytorch -c pytorch
 ```
 
+Install the package in dev mode:
+```
+pip install -e .
+```
+
 Set MKL threading on Frontera CLX node
 ```shell
 export OMP_NUM_THREADS=56

@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from models import *
-from datasets import BoxesDataset
+from supressim.srgan import models
+from supressim.srgan.datasets import BoxesDataset
 
 sample_path = "saved_samples/"
 model_path = "saved_models/"
@@ -32,8 +32,8 @@ print(args)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 device = torch.device(device)
 
-generator = GeneratorResNet()
-discriminator = Discriminator()
+generator = models.GeneratorResNet()
+discriminator = models.Discriminator()
 #feature_extractor = FeatureExtractor()
 
 ## Set feature extractor to inference mode
@@ -105,7 +105,7 @@ for epoch in range(args.epoch, args.n_epochs):
 
         optimizer_D.zero_grad()
 
-        hr_boxes = narrow_like(hr_boxes, sr_boxes)
+        hr_boxes = models.narrow_like(hr_boxes, sr_boxes)
         loss_real = criterion_GAN(discriminator(hr_boxes), yes)
         loss_fake = criterion_GAN(discriminator(sr_boxes.detach()), no)
 
