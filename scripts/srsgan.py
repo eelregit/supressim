@@ -19,8 +19,8 @@ parser.add_argument("--epoch", type=int, default=0, help="epoch to start trainin
 parser.add_argument("--n-epochs", type=int, default=200, help="number of epochs of training")
 parser.add_argument("--hr-glob-path", type=str, default="/scratch1/06589/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy", help="glob pattern for hires data")
 parser.add_argument("--batch-size", type=int, default=4, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
+parser.add_argument("--lr", type=float, default=0.001, help="adam: learning rate")
+parser.add_argument("--b1", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--decay-epoch", type=int, default=100, help="epoch from which to start lr decay")
 parser.add_argument("--n-cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
@@ -40,13 +40,15 @@ discriminator = models.Discriminator()
 #feature_extractor.eval()
 
 # Losses
-criterion_GAN = nn.MSELoss()  # FIXME this MSE loss is strange
+criterion_G = nn.MSELoss()
+criterion_D = nn.BCELoss()
 #criterion_content = nn.L1Loss()
 
 generator = generator.to(device)
 discriminator = discriminator.to(device)
 #feature_extractor = feature_extractor.to(device)
-criterion_GAN = criterion_GAN.to(device)
+criterion_G = criterion_G.to(device)
+criterion_D = criterion_D.to(device)
 #criterion_content = criterion_content.to(device)
 
 if args.epoch != 0:
@@ -73,8 +75,8 @@ for epoch in range(args.epoch, args.n_epochs):
         lr_boxes = lr_boxes.to(device)
         hr_boxes = hr_boxes.to(device)
 
-        yes = torch.ones(1, dtype=torch.float, device=device, requires_grad=False)  # broadcasting
-        no = torch.zeros(1, dtype=torch.float, device=device, requires_grad=False)
+        real = torch.ones(1, dtype=torch.float, device=device, requires_grad=False)  # broadcasting
+        fake = torch.zeros(1, dtype=torch.float, device=device, requires_grad=False)
 
         # -----------------
         #  Train Generator
@@ -85,16 +87,17 @@ for epoch in range(args.epoch, args.n_epochs):
         sr_boxes = generator(lr_boxes)
 
         # Adversarial loss
-        loss_GAN = criterion_GAN(discriminator(sr_boxes), yes)
+        sr_guess = discriminator(sr_boxes)
+        sr_guess, real, fake = torch.broadcast_tensors(sr_guess, real, fake)
+        loss_G = criterion_G(sr_guess, real)
 
         ## Content loss
         #gen_features = feature_extractor(gen_hr)
         #real_features = feature_extractor(imgs_hr)
         #loss_content = criterion_content(gen_features, real_features.detach())
 
-        # Total loss
-        #loss_G = loss_content + 1e-3 * loss_GAN
-        loss_G = loss_GAN
+        ## Total loss
+        #loss_G = loss_content + 1e-3 * loss_G
 
         loss_G.backward()
         optimizer_G.step()
@@ -106,8 +109,8 @@ for epoch in range(args.epoch, args.n_epochs):
         optimizer_D.zero_grad()
 
         hr_boxes = models.narrow_like(hr_boxes, sr_boxes)
-        loss_real = criterion_GAN(discriminator(hr_boxes), yes)
-        loss_fake = criterion_GAN(discriminator(sr_boxes.detach()), no)
+        loss_real = criterion_D(discriminator(hr_boxes), real)
+        loss_fake = criterion_D(discriminator(sr_boxes.detach()), fake)
 
         loss_D = (loss_real + loss_fake) / 2
 
