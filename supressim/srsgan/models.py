@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from supressim.srgan.pixelshuffle import PixelShuffle
+from supressim.srsgan.pixelshuffle import PixelShuffle
 
 
 #class FeatureExtractor(nn.Module):

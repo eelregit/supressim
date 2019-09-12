@@ -21,7 +21,7 @@ export OMP_NUM_THREADS=56
 
 ## Models
 
-* SRGAN
+* SRSGAN = SRGAN - content loss function + ...
 * TODO: GAN to CGAN
     - Add `torch.nn.functional.interpolate` to upsample lores in preproc.py
     - Dataset, model

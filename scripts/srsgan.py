@@ -8,8 +8,8 @@ from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch import distributed as dist
 
-from supressim.srgan import models
-from supressim.srgan.datasets import BoxesDataset
+from supressim.srsgan import models
+from supressim.srsgan.datasets import BoxesDataset
 
 sample_path = "saved_samples/"
 model_path = "saved_models/"
