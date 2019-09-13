@@ -56,7 +56,8 @@ class BoxesDataset(Dataset):
             lr_box, hr_box = _random_flip_3d(lr_box, hr_box)
             lr_box, hr_box = _random_permute_3d(lr_box, hr_box)
 
-
+        lr_box = lr_box[:3]
+        hr_box = hr_box[:3]
         lr_box = torch.from_numpy(lr_box).float()
         hr_box = torch.from_numpy(hr_box).float()
 
