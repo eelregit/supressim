@@ -17,6 +17,7 @@ os.makedirs(model_path, exist_ok=True)
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
 parser.add_argument("--n-epochs", type=int, default=200, help="number of epochs of training")
+parser.add_argument("--n-discriminator-blocks", type=int, default=4, help="number of discriminator blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--hr-glob-path", type=str, default="/scratch1/06589/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy", help="glob pattern for hires data")
 parser.add_argument("--batch-size", type=int, default=4, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.001, help="adam: learning rate")
@@ -33,7 +34,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 device = torch.device(device)
 
 generator = models.GeneratorResNet()
-discriminator = models.Discriminator()
+discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
 #feature_extractor = FeatureExtractor()
 
 ## Set feature extractor to inference mode
