@@ -61,7 +61,7 @@ optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr, betas=(args.b
 optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
 
 dataloader = DataLoader(
-    BoxesDataset(args.hr_glob_path),
+    BoxesDataset(args.hr_glob_path, augment=False),
     batch_size=args.batch_size,
     shuffle=True,
     num_workers=args.n_cpu,
