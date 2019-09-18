@@ -43,7 +43,7 @@ discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
 
 # Losses
 criterion_G = nn.MSELoss()
-criterion_D = nn.BCELoss()
+criterion_D = nn.BCEWithLogitsLoss()
 #criterion_content = nn.L1Loss()
 
 generator = generator.to(device)
