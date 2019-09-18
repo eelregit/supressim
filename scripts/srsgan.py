@@ -17,12 +17,14 @@ os.makedirs(model_path, exist_ok=True)
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
 parser.add_argument("--n-epochs", type=int, default=200, help="number of epochs of training")
+parser.add_argument("--n-discriminator-blocks", type=int, default=4, help="number of discriminator blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--hr-glob-path", type=str, default="/scratch1/06589/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy", help="glob pattern for hires data")
 parser.add_argument("--batch-size", type=int, default=4, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.001, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--decay-epoch", type=int, default=100, help="epoch from which to start lr decay")
+parser.add_argument("--weight-decay", type=float, default=0.0002, help="adam: weight decay (similar to L2 regularization)")
+#parser.add_argument("--decay-epoch", type=int, default=100, help="epoch from which to start lr decay")
 parser.add_argument("--n-cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
 parser.add_argument("--sample-interval", type=int, default=100, help="interval between saving samples")
 parser.add_argument("--checkpoint-interval", type=int, default=-1, help="interval between model checkpoints")
@@ -33,7 +35,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 device = torch.device(device)
 
 generator = models.GeneratorResNet()
-discriminator = models.Discriminator()
+discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
 #feature_extractor = FeatureExtractor()
 
 ## Set feature extractor to inference mode
@@ -41,7 +43,7 @@ discriminator = models.Discriminator()
 
 # Losses
 criterion_G = nn.MSELoss()
-criterion_D = nn.BCELoss()
+criterion_D = nn.BCEWithLogitsLoss()
 #criterion_content = nn.L1Loss()
 
 generator = generator.to(device)
@@ -55,8 +57,8 @@ if args.epoch != 0:
     generator.load_state_dict(torch.load(model_path + "generator_%d.pth"))
     discriminator.load_state_dict(torch.load(model_path + "discriminator_%d.pth"))
 
-optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr, betas=(args.b1, args.b2))
-optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr, betas=(args.b1, args.b2))
+optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
+optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
 
 dataloader = DataLoader(
     BoxesDataset(args.hr_glob_path),
@@ -130,9 +132,9 @@ for epoch in range(args.epoch, args.n_epochs):
         batches = epoch * len(dataloader) + i
         if batches % args.sample_interval == 0:
             #lr_boxes = nn.functional.interpolate(lr_boxes, scale_factor=2)
-            np.save(sample_path + "lr_{}.npy".format(batches), lr_boxes.numpy())
-            np.save(sample_path + "hr_{}.npy".format(batches), hr_boxes.numpy())
-            np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().numpy())
+            np.save(sample_path + "lr_{}.npy".format(batches), lr_boxes.cpu().numpy())
+            np.save(sample_path + "hr_{}.npy".format(batches), hr_boxes.cpu().numpy())
+            np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().cpu().numpy())
 
     if args.checkpoint_interval != -1 and epoch % args.checkpoint_interval == 0:
         torch.save(generator.state_dict(), model_path + "generator_%d.pth" % epoch)

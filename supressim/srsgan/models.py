@@ -78,7 +78,7 @@ class GeneratorResNet(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, in_channels=3):
+    def __init__(self, in_channels=3, n_blocks=4):
         super(Discriminator, self).__init__()
 
         def discriminator_block(in_channels, out_channels, first_block=False):
@@ -93,7 +93,8 @@ class Discriminator(nn.Module):
             return layers
 
         layers = []
-        for i, out_channels in enumerate([64, 128, 256, 512]):
+        block_out_channels = [(64 << i) for i in range(n_blocks)]
+        for i, out_channels in enumerate(block_out_channels):
             layers.extend(discriminator_block(in_channels, out_channels, first_block=(i == 0)))
             in_channels = out_channels
 
@@ -102,4 +103,4 @@ class Discriminator(nn.Module):
         self.model = nn.Sequential(*layers)
 
     def forward(self, img):
-        return torch.sigmoid(self.model(img))
+        return self.model(img)
