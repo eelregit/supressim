@@ -131,9 +131,9 @@ for epoch in range(args.epoch, args.n_epochs):
         batches = epoch * len(dataloader) + i
         if batches % args.sample_interval == 0:
             #lr_boxes = nn.functional.interpolate(lr_boxes, scale_factor=2)
-            np.save(sample_path + "lr_{}.npy".format(batches), lr_boxes.numpy())
-            np.save(sample_path + "hr_{}.npy".format(batches), hr_boxes.numpy())
-            np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().numpy())
+            np.save(sample_path + "lr_{}.npy".format(batches), lr_boxes.cpu().numpy())
+            np.save(sample_path + "hr_{}.npy".format(batches), hr_boxes.cpu().numpy())
+            np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().cpu().numpy())
 
     if args.checkpoint_interval != -1 and epoch % args.checkpoint_interval == 0:
         torch.save(generator.state_dict(), model_path + "generator_%d.pth" % epoch)
