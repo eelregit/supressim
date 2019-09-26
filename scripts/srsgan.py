@@ -15,6 +15,7 @@ sample_path = "saved_samples/"
 model_path = "saved_models/"
 os.makedirs(sample_path, exist_ok=True)
 os.makedirs(model_path, exist_ok=True)
+torch.autograd.set_detect_anomaly(True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
@@ -51,6 +52,13 @@ def main(rank, size):
     generator = generator.to(device)
     discriminator = discriminator.to(device)
     #feature_extractor = feature_extractor.to(device)
+    
+    pg1 = dist.new_group(range(dist.get_world_size()))
+    generator = DDP(generator,process_group=pg1,broadcast_buffers=False)
+    
+    pg2 = dist.new_group(range(dist.get_world_size()))
+    discriminator = DDP(discriminator,process_group=pg2,broadcast_buffers=False)
+    
     criterion_G = criterion_G.to(device)
     criterion_D = criterion_D.to(device)
     #criterion_content = criterion_content.to(device)
@@ -103,7 +111,7 @@ def main(rank, size):
             ## Total loss
             #loss_G = loss_content + 1e-3 * loss_G
 
-            loss_G = DDP(loss_G)
+            #loss_G = DDP(loss_G)
             loss_G.backward()
             optimizer_G.step()
 
@@ -118,7 +126,7 @@ def main(rank, size):
             loss_fake = criterion_D(discriminator(sr_boxes.detach()), fake)
 
             loss_D = (loss_real + loss_fake) / 2
-            loss_D = DDP(loss_D)
+            #loss_D = DDP(loss_D)
             loss_D.backward()
             optimizer_D.step()
 
