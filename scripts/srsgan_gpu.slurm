@@ -15,8 +15,6 @@ hostname; pwd; date
 
 BATCH_SIZE=$SLURM_CPUS_PER_TASK
 
-export OMP_NUM_THREADS=$BATCH_SIZE
-
 srsgan.py --batch-size $BATCH_SIZE \
           --n-cpu $BATCH_SIZE \
           --checkpoint-interval 1 \

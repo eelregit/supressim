@@ -21,15 +21,14 @@ export OMP_NUM_THREADS=56
 
 ## Models
 
-* SRSGAN = SRGAN - content loss function + ...
-* TODO: GAN to CGAN
-    - Add `torch.nn.functional.interpolate` to upsample lores in preproc.py
-    - Dataset, model
+* SRSGAN = SRGAN + pix2pix + ?
 * TODO: concatenate white noise to lores in generator input
-* TODO: ICNR initialization
-  - <https://arxiv.org/abs/1707.02937>
-* TODO: batchnorm after activation?
-* TODO: activation, swish?
+* TODO, final tweaks:
+    - capacities
+    - interpolate vs pixelshuffle
+    - ICNR initialization <https://arxiv.org/abs/1707.02937>
+    -batchnorm after activation?
+    - activation, swish?
 
 
 ### Refs and Repos

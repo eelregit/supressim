@@ -36,13 +36,16 @@ parser.add_argument("--checkpoint-interval", type=int, default=-1, help="interva
 args = parser.parse_args()
 print(args)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 generator = models.GeneratorResNet(n_residual_blocks=args.n_generator_residual_blocks)
 discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
 criterion_adversarial = nn.BCEWithLogitsLoss()
 criterion_content = nn.SmoothL1Loss()
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+if torch.cuda.device_count() > 1:
+    generator = nn.DataParallel(generator)
+    discriminator = nn.DataParallel(discriminator)
 
 generator = generator.to(device)
 discriminator = discriminator.to(device)
