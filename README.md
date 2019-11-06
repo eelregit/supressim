@@ -52,6 +52,7 @@ export OMP_NUM_THREADS=56
 
 * augmentation, 8 flips x 6 permutations = 48 operations, on displacement and
   correspondingly velocity
+* normalization, of displacement and velocity fields, by linear theory
 * dark matter only simulations, 5 realizations, 50Mpc/h, z=7
     - lores 440^3 particles
     - hires 880^3 particles

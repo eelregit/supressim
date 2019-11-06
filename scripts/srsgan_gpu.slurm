@@ -2,26 +2,24 @@
 
 #SBATCH --job-name=srsgan
 #SBATCH --output=%x-%j.out
+#SBATCH --error=%x-%j.err
 
-#SBATCH --partition=gen
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:v100-32gb:1
 
-#SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --time=0-01:00:00
+#SBATCH --cpus-per-task=2
+#SBATCH --time=1-00:00:00
 
 hostname; pwd; date
 
-export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
-echo $OMP_NUM_THREADS threads
+BATCH_SIZE=$SLURM_CPUS_PER_TASK
 
-LOG_PATH=$PWD/$SLURM_JOB_NAME-$SLURM_JOB_ID.out
-
-BATCH_SIZE=5
+export OMP_NUM_THREADS=$BATCH_SIZE
 
 srsgan.py --batch-size $BATCH_SIZE \
           --n-cpu $BATCH_SIZE \
           --checkpoint-interval 1 \
           --hr-glob-path '/mnt/ceph/users/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy'
-          &>> "$LOG_PATH"
 
 date
