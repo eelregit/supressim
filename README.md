@@ -75,15 +75,13 @@ TODO: The following metrics can be used for evaluation
 
 Parallelization
 
-TODO: DDP
-TODO: MKL-DNN vs DP
 * MKL-DNN
   - `export MKL_NUM_THREADS=$NUM_CORES OMP_NUM_THREADS=$NUM_CORES`
   - alternatively, `torch.set_num_threads(num_cores)`
   - `torch.utils.data.DataLoader(num_workers=0)`, increase this number helps
   - <https://github.com/pytorch/pytorch/issues/9873>
 * DataParallel and DistributedDataParallel, and torch.distributed
-  - DP tutorial <https://pytorch.org/tutorials/beginner/blitz/data_parallel_tutorial.html#sphx-glr-beginner-blitz-data-parallel-tutorial-py>
+  - DP tutorial <https://pytorch.org/tutorials/beginner/blitz/data_parallel_tutorial.html>
   - DDP tutorial <https://pytorch.org/tutorials/intermediate/ddp_tutorial.html>
   - torch.distributed tutorial <https://pytorch.org/tutorials/intermediate/dist_tuto.html>
   - <https://pytorch.org/docs/stable/nn.html#dataparallel-layers-multi-gpu-distributed>

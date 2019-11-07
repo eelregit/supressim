@@ -47,14 +47,14 @@ if torch.cuda.device_count() > 1:
     generator = nn.DataParallel(generator)
     discriminator = nn.DataParallel(discriminator)
 
+if args.epoch != 0:
+    generator.load_state_dict(torch.load(model_path + "generator_{}.pth".format(args.epoch)))
+    discriminator.load_state_dict(torch.load(model_path + "discriminator_{}.pth".format(args.epoch)))
+
 generator = generator.to(device)
 discriminator = discriminator.to(device)
 criterion_adversarial = criterion_adversarial.to(device)
 criterion_content = criterion_content.to(device)
-
-if args.epoch != 0:
-    generator.load_state_dict(torch.load(model_path + "generator_{}.pth".format(args.epoch)))
-    discriminator.load_state_dict(torch.load(model_path + "discriminator_{}.pth".format(args.epoch)))
 
 #optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
 #optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr, betas=(args.b1, args.b2), weight_decay=args.weight_decay)
@@ -72,7 +72,7 @@ dataloader = DataLoader(
 #  Training
 # ----------
 
-torch.manual_seed(42)
+torch.manual_seed(42 + args.epoch)  # FIXME
 
 for epoch in range(args.epoch, args.n_epochs):
     for i, (lr_boxes, hr_boxes) in enumerate(dataloader):
@@ -148,8 +148,8 @@ for epoch in range(args.epoch, args.n_epochs):
             np.save(sample_path + "sr_{}.npy".format(batches), sr_boxes.detach().cpu().numpy())
 
     if args.checkpoint_interval != -1 and epoch % args.checkpoint_interval == 0:
-        torch.save(generator.state_dict(), model_path + "generator_{}.pth".format(epoch))
-        torch.save(discriminator.state_dict(), model_path + "discriminator_{}.pth".format(epoch))
+        torch.save(generator.state_dict(), model_path + "generator_{}.pth".format(1 + epoch))
+        torch.save(discriminator.state_dict(), model_path + "discriminator_{}.pth".format(1 + epoch))
 
     if torch.cuda.is_available():
         sys.stderr.write("max GPU mem allocated: {}\n".format(torch.cuda.max_memory_allocated()))
