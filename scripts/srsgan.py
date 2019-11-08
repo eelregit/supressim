@@ -21,6 +21,7 @@ parser.add_argument("--n-epochs", type=int, default=200, help="number of epochs 
 parser.add_argument("--n-generator-residual-blocks", type=int, default=2, help="number of generator residual blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--n-discriminator-blocks", type=int, default=2, help="number of discriminator blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--lambda-content", type=float, default=100, help="weight for content loss.")
+parser.add_argument("--lambda-adversarial", type=float, default=1, help="weight for adversarial loss. Set it <= 0 to turn the GAN off.")
 parser.add_argument("--cgan", type=bool, default=True, help="use conditional GAN in the discriminator.")
 parser.add_argument("--hr-glob-path", type=str, default="/scratch1/06589/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy", help="glob pattern for hires data")
 parser.add_argument("--batch-size", type=int, default=4, help="size of the batches")
@@ -49,7 +50,10 @@ if torch.cuda.device_count() > 1:
 
 if args.epoch != 0:
     generator.load_state_dict(torch.load(model_path + "generator_{}.pth".format(args.epoch)))
-    discriminator.load_state_dict(torch.load(model_path + "discriminator_{}.pth".format(args.epoch)))
+    try:
+        discriminator.load_state_dict(torch.load(model_path + "discriminator_{}.pth".format(args.epoch)))
+    except FileNotFoundError:
+        warnings.warn("Cannot find the discriminator state file. Ignore this if GAN is being turned on halfway.")
 
 generator = generator.to(device)
 discriminator = discriminator.to(device)
@@ -80,15 +84,12 @@ for epoch in range(args.epoch, args.n_epochs):
         lr_boxes = lr_boxes.to(device)
         hr_boxes = hr_boxes.to(device)
 
-        real = torch.ones(1, dtype=torch.float, device=device, requires_grad=False)  # broadcasting
-        fake = torch.zeros(1, dtype=torch.float, device=device, requires_grad=False)
+        real = torch.ones(1, dtype=torch.float, device=device)
+        fake = torch.zeros(1, dtype=torch.float, device=device)
 
         sr_boxes = generator(lr_boxes)
 
         hr_boxes = models.narrow_like(hr_boxes, sr_boxes)
-        if args.cgan:
-            lu_boxes = F.interpolate(lr_boxes, scale_factor=2, mode='nearest')
-            lu_boxes = models.narrow_like(lu_boxes, sr_boxes)
 
         # -----------------
         #  Train Generator
@@ -98,15 +99,14 @@ for epoch in range(args.epoch, args.n_epochs):
 
         loss_G_content = criterion_content(sr_boxes, hr_boxes)
 
-        if args.cgan:
-            sr_boxes = torch.cat([lu_boxes, sr_boxes], dim=1)
-            hr_boxes = torch.cat([lu_boxes, hr_boxes], dim=1)
+        if args.lambda_adversarial > 0:
+            sr_guess = discriminator(sr_boxes)
+            sr_guess, real, fake = torch.broadcast_tensors(sr_guess, real, fake)
+            loss_G_adversarial = criterion_adversarial(sr_guess, real)
+        else:
+            loss_G_adversarial = torch.tensor([0.], device=device)
 
-        sr_guess = discriminator(sr_boxes)
-        sr_guess, real, fake = torch.broadcast_tensors(sr_guess, real, fake)
-        loss_G_adversarial = criterion_adversarial(sr_guess, real)
-
-        loss_G = args.lambda_content * loss_G_content + loss_G_adversarial
+        loss_G = args.lambda_content * loss_G_content + args.lambda_adversarial * loss_G_adversarial
 
         loss_G.backward()
         optimizer_G.step()
@@ -115,15 +115,25 @@ for epoch in range(args.epoch, args.n_epochs):
         #  Train Discriminator
         # ---------------------
 
-        optimizer_D.zero_grad()
+        if args.lambda_adversarial > 0:
+            if args.cgan:
+                lu_boxes = F.interpolate(lr_boxes, scale_factor=2, mode='nearest')
+                lu_boxes = models.narrow_like(lu_boxes, sr_boxes)
 
-        loss_D_real = criterion_adversarial(discriminator(hr_boxes), real)
-        loss_D_fake = criterion_adversarial(discriminator(sr_boxes.detach()), fake)
+                sr_boxes = torch.cat([lu_boxes, sr_boxes], dim=1)
+                hr_boxes = torch.cat([lu_boxes, hr_boxes], dim=1)
 
-        loss_D = (loss_D_real + loss_D_fake) / 2
+            optimizer_D.zero_grad()
 
-        loss_D.backward()
-        optimizer_D.step()
+            loss_D_real = criterion_adversarial(discriminator(hr_boxes), real)
+            loss_D_fake = criterion_adversarial(discriminator(sr_boxes.detach()), fake)
+
+            loss_D = (loss_D_real + loss_D_fake) / 2
+
+            loss_D.backward()
+            optimizer_D.step()
+        else:
+            loss_D = loss_D_real = loss_D_fake = torch.tensor([0.], device=device)
 
         # --------------
         #  Log Progress
@@ -139,7 +149,7 @@ for epoch in range(args.epoch, args.n_epochs):
 
         batches = epoch * len(dataloader) + i
         if batches % args.sample_interval == 0:
-            if args.cgan:
+            if args.lambda_adversarial > 0 and args.cgan:
                 sr_boxes = sr_boxes[:, sr_boxes.shape[1] // 2 :]
                 hr_boxes = hr_boxes[:, hr_boxes.shape[1] // 2 :]
 
@@ -149,7 +159,8 @@ for epoch in range(args.epoch, args.n_epochs):
 
     if args.checkpoint_interval != -1 and epoch % args.checkpoint_interval == 0:
         torch.save(generator.state_dict(), model_path + "generator_{}.pth".format(1 + epoch))
-        torch.save(discriminator.state_dict(), model_path + "discriminator_{}.pth".format(1 + epoch))
+        if args.lambda_adversarial > 0:
+            torch.save(discriminator.state_dict(), model_path + "discriminator_{}.pth".format(1 + epoch))
 
     if torch.cuda.is_available():
         sys.stderr.write("max GPU mem allocated: {}\n".format(torch.cuda.max_memory_allocated()))
