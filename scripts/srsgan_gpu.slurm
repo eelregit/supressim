@@ -18,7 +18,7 @@ BATCH_SIZE=$SLURM_CPUS_PER_TASK
 srsgan.py --batch-size $BATCH_SIZE \
           --n-cpu $BATCH_SIZE \
           --epoch 11 \
-          --lambda-content 1000 \
+          --lambda-content 1 \
           --lambda-adversarial 0 \
           --lr-G 0.00005 \
           --lr-D 0 \
