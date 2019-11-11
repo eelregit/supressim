@@ -5,7 +5,7 @@ setup(
     name='supressim',
     version='0.0',
     description='Simulation enhancers and transformers',
-    author='Yin Li, Yu Feng, et al.',
+    author='Yin Li, Yu Feng, Yueying Ni, et al.',
     author_email='eelregit@gmail.com',
     packages=find_packages(),
     install_requires=[
