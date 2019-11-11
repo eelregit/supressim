@@ -17,11 +17,11 @@ BATCH_SIZE=$SLURM_CPUS_PER_TASK
 
 srsgan.py --batch-size $BATCH_SIZE \
           --n-cpu $BATCH_SIZE \
-          --epoch 11 \
-          --lambda-content 1 \
-          --lambda-adversarial 0 \
-          --lr-G 0.00005 \
-          --lr-D 0 \
+          --epoch 0 \
+          --lambda-content 1000 \
+          --lambda-adversarial 1 \
+          --lr-G 0.0004 \
+          --lr-D 0.0001 \
           --checkpoint-interval 1 \
           --hr-glob-path '/mnt/ceph/users/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy'
 

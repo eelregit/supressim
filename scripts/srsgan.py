@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import warnings
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,7 +21,7 @@ parser.add_argument("--epoch", type=int, default=0, help="epoch to start trainin
 parser.add_argument("--n-epochs", type=int, default=200, help="number of epochs of training")
 parser.add_argument("--n-generator-residual-blocks", type=int, default=2, help="number of generator residual blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--n-discriminator-blocks", type=int, default=2, help="number of discriminator blocks. Reduce this if the training image is small to avoid convolving away everything.")
-parser.add_argument("--lambda-content", type=float, default=100, help="weight for content loss.")
+parser.add_argument("--lambda-content", type=float, default=1000, help="weight for content loss.")
 parser.add_argument("--lambda-adversarial", type=float, default=1, help="weight for adversarial loss. Set it <= 0 to turn the GAN off.")
 parser.add_argument("--cgan", type=bool, default=True, help="use conditional GAN in the discriminator.")
 parser.add_argument("--hr-glob-path", type=str, default="/scratch1/06589/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy", help="glob pattern for hires data")
@@ -40,7 +41,7 @@ print(args)
 generator = models.GeneratorResNet(n_residual_blocks=args.n_generator_residual_blocks)
 discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
 criterion_adversarial = nn.BCEWithLogitsLoss()
-criterion_content = nn.SmoothL1Loss()
+criterion_content = nn.MSELoss()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -100,6 +101,13 @@ for epoch in range(args.epoch, args.n_epochs):
         loss_G_content = criterion_content(sr_boxes, hr_boxes)
 
         if args.lambda_adversarial > 0:
+            if args.cgan:
+                lu_boxes = F.interpolate(lr_boxes, scale_factor=2, mode='nearest')
+                lu_boxes = models.narrow_like(lu_boxes, sr_boxes)
+
+                sr_boxes = torch.cat([lu_boxes, sr_boxes], dim=1)
+                hr_boxes = torch.cat([lu_boxes, hr_boxes], dim=1)
+
             sr_guess = discriminator(sr_boxes)
             sr_guess, real, fake = torch.broadcast_tensors(sr_guess, real, fake)
             loss_G_adversarial = criterion_adversarial(sr_guess, real)
@@ -116,13 +124,6 @@ for epoch in range(args.epoch, args.n_epochs):
         # ---------------------
 
         if args.lambda_adversarial > 0:
-            if args.cgan:
-                lu_boxes = F.interpolate(lr_boxes, scale_factor=2, mode='nearest')
-                lu_boxes = models.narrow_like(lu_boxes, sr_boxes)
-
-                sr_boxes = torch.cat([lu_boxes, sr_boxes], dim=1)
-                hr_boxes = torch.cat([lu_boxes, hr_boxes], dim=1)
-
             optimizer_D.zero_grad()
 
             loss_D_real = criterion_adversarial(discriminator(hr_boxes), real)
