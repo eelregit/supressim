@@ -22,8 +22,8 @@ parser.add_argument("--n-epochs", type=int, default=200, help="number of epochs 
 parser.add_argument("--n-generator-residual-blocks", type=int, default=2, help="number of generator residual blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--n-discriminator-blocks", type=int, default=2, help="number of discriminator blocks. Reduce this if the training image is small to avoid convolving away everything.")
 parser.add_argument("--lambda-content", type=float, default=1000, help="weight for content loss.")
-parser.add_argument("--lambda-adversarial", type=float, default=1, help="weight for adversarial loss. Set it <= 0 to turn the GAN off.")
-parser.add_argument("--cgan", type=bool, default=True, help="use conditional GAN in the discriminator.")
+parser.add_argument("--lambda-adversarial", type=float, default=1, help="weight for adversarial loss. Setting it <= 0 disables GAN.")
+parser.add_argument("--no-cgan", dest="cgan", action='store_false', help="disable conditional GAN in the discriminator")
 parser.add_argument("--hr-glob-path", type=str, default="/scratch1/06589/yinli/dmo-50MPC-fixvel/high-resl/set?/output/PART_004/*.npy", help="glob pattern for hires data")
 parser.add_argument("--batch-size", type=int, default=4, help="size of the batches")
 parser.add_argument("--lr-G", type=float, default=0.0001, help="learning rate for generator")
@@ -32,11 +32,15 @@ parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first 
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
 #parser.add_argument("--weight-decay", type=float, default=0.0002, help="adam: weight decay (similar to L2 regularization)")
 #parser.add_argument("--decay-epoch", type=int, default=100, help="epoch from which to start lr decay")
-parser.add_argument("--n-cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
-parser.add_argument("--sample-interval", type=int, default=100, help="interval between saving samples")
+parser.add_argument("--num-workers", type=int, default=0, help="number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.")
+parser.add_argument("--sample-interval", type=int, default=500, help="interval between saving samples")
 parser.add_argument("--checkpoint-interval", type=int, default=-1, help="interval between model checkpoints")
+parser.add_argument("--fast-transfer", action='store_true', help="speed up data transfer to GPUs by putting CPU tensors in pinned memory and doing asynchronous GPU copies")
+parser.add_argument("--seed", type=int, default=42, help="seed for RNG")
 args = parser.parse_args()
 print(args)
+
+torch.manual_seed(args.seed + args.epoch)  # FIXME
 
 generator = models.GeneratorResNet(n_residual_blocks=args.n_generator_residual_blocks)
 discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
@@ -70,20 +74,19 @@ dataloader = DataLoader(
     BoxesDataset(args.hr_glob_path, augment=False),
     batch_size=args.batch_size,
     shuffle=True,
-    num_workers=args.n_cpu,
+    num_workers=args.num_workers,
+    pin_memory=args.fast_transfer,
 )
 
 # ----------
 #  Training
 # ----------
 
-torch.manual_seed(42 + args.epoch)  # FIXME
-
 for epoch in range(args.epoch, args.n_epochs):
     for i, (lr_boxes, hr_boxes) in enumerate(dataloader):
 
-        lr_boxes = lr_boxes.to(device)
-        hr_boxes = hr_boxes.to(device)
+        lr_boxes = lr_boxes.to(device, non_blocking=args.fast_transfer)
+        hr_boxes = hr_boxes.to(device, non_blocking=args.fast_transfer)
 
         real = torch.ones(1, dtype=torch.float, device=device)
         fake = torch.zeros(1, dtype=torch.float, device=device)

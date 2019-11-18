@@ -7,16 +7,23 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:v100-32gb:4
 
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --nodes=1
+#SBATCH --ntasks=8
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=0
 #SBATCH --time=1-00:00:00
 
 hostname; pwd; date
 
-BATCH_SIZE=$SLURM_CPUS_PER_TASK
+source $HOME/anaconda3/bin/activate torch
+
+module load gcc openmpi2
+module load cuda/10.1.243_418.87.00 cudnn/v7.6.2-cuda-10.1
+
+BATCH_SIZE=8
 
 srsgan.py --batch-size $BATCH_SIZE \
-          --n-cpu $BATCH_SIZE \
+          --num-workers $BATCH_SIZE \
           --epoch 0 \
           --lambda-content 1000 \
           --lambda-adversarial 1 \
