@@ -40,7 +40,7 @@ parser.add_argument("--seed", type=int, default=42, help="seed for RNG")
 args = parser.parse_args()
 print(args)
 
-torch.manual_seed(args.seed + args.epoch)  # FIXME
+torch.manual_seed(args.seed)
 
 generator = models.GeneratorResNet(n_residual_blocks=args.n_generator_residual_blocks)
 discriminator = models.Discriminator(n_blocks=args.n_discriminator_blocks)
@@ -59,6 +59,7 @@ if args.epoch != 0:
         discriminator.load_state_dict(torch.load(model_path + "discriminator_{}.pth".format(args.epoch)))
     except FileNotFoundError:
         warnings.warn("Cannot find the discriminator state file. Ignore this if GAN is being turned on halfway.")
+    torch.set_rng_state(torch.load(model_path + "rng_state_{}.pth".format(args.epoch)))
 
 generator = generator.to(device)
 discriminator = discriminator.to(device)
@@ -165,6 +166,7 @@ for epoch in range(args.epoch, args.n_epochs):
         torch.save(generator.state_dict(), model_path + "generator_{}.pth".format(1 + epoch))
         if args.lambda_adversarial > 0:
             torch.save(discriminator.state_dict(), model_path + "discriminator_{}.pth".format(1 + epoch))
+        torch.save(torch.get_rng_state(), model_path + "rng_state_{}.pth".format(1 + epoch))
 
     if torch.cuda.is_available():
         sys.stderr.write("max GPU mem allocated: {}\n".format(torch.cuda.max_memory_allocated()))
