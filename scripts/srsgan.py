@@ -82,6 +82,7 @@ dataloader = DataLoader(
 # ----------
 #  Training
 # ----------
+torch.backends.cudnn.benchmark = True
 
 for epoch in range(args.epoch, args.n_epochs):
     for i, (lr_boxes, hr_boxes) in enumerate(dataloader):

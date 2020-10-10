@@ -81,10 +81,11 @@ Parallelization
   - `torch.utils.data.DataLoader(num_workers=0)`, increase this number helps
   - <https://github.com/pytorch/pytorch/issues/9873>
 * DataParallel and DistributedDataParallel, and torch.distributed
-  - DP tutorial <https://pytorch.org/tutorials/beginner/blitz/data_parallel_tutorial.html>
-  - DDP tutorial <https://pytorch.org/tutorials/intermediate/ddp_tutorial.html>
+  - DP official tutorial <https://pytorch.org/tutorials/beginner/blitz/data_parallel_tutorial.html>
+  - explain DDP <https://yangkky.github.io/2019/07/08/distributed-pytorch-tutorial.html>
+  - DDP official tutorial <https://pytorch.org/tutorials/intermediate/ddp_tutorial.html>
+  - DDP example <https://github.com/pytorch/examples/tree/master/imagenet>
   - torch.distributed tutorial <https://pytorch.org/tutorials/intermediate/dist_tuto.html>
-  - <https://pytorch.org/docs/stable/nn.html#dataparallel-layers-multi-gpu-distributed>
   - <https://pytorch.org/docs/stable/distributed.html#basics>
     DDP "differs from the kinds of parallelism provided by Multiprocessing package - torch.multiprocessing and torch.nn.DataParallel() in that it supports multiple network-connected machines and in that the user must explicitly launch a separate copy of the main training script for each process."
   - performance difference <https://discuss.pytorch.org/t/why-torch-nn-parallel-distributeddataparallel-runs-faster-than-torch-nn-dataparallel-on-single-machine-with-multi-gpu/32977>
