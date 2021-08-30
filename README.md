@@ -1,5 +1,6 @@
 # Super-Resolution Simulation
 
+**Superceded by [map2map](https://github.com/eelregit/map2map)
 
 ## Run
 
